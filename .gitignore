@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+temp_downloads/
+*.xlsx
+*.png
+not_found_faktur_pajak*.txt
+.pytest_cache/
+.venv/

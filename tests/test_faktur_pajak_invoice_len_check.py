@@ -1,3 +1,7 @@
+"""
+TEST: Mencari dan mendata (logging) Faktur Pajak yang nomor invoice-nya kurang dari 11 karakter.
+Hanya melakukan pengecekan (Read-only), tidak melakukan update.
+"""
 import os
 import pytest
 from pages.login_page import LoginPage

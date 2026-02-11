@@ -21,3 +21,5 @@ def login_page(page):
 def faktur_pajak_page(page):
     from pages.faktur_pajak_page import FakturPajakPage
     return FakturPajakPage(page)
+
+

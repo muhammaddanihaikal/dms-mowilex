@@ -1,8 +1,12 @@
+"""
+TEST: Mengecek apakah PDF Faktur Pajak bisa didownload atau 'Not Found'.
+Hasilnya dicatat ke dalam file log txt (misal: not_found_faktur_pajak.txt).
+"""
 import os
 import pytest
 from pages.login_page import LoginPage
 from pages.faktur_pajak_page import FakturPajakPage
-from utils.file_utils import append_to_not_found_file
+from utils.file_utils import append_to_not_found_file, write_header_to_not_found_file
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,13 +31,23 @@ def test_faktur_pajak_download_not_match(page):
     # 3. Filter Status Invoice = "Not Match"
     faktur_pajak_page.apply_filter_not_match()
     
+    # 4. Filter Date: 10 Feb 2026 to 10 Feb 2026
+    faktur_pajak_page.apply_date_filter("2026-02-10", "2026-02-10")
+    
     # Set to 100 records per page
     faktur_pajak_page.set_records_per_page("100")
     
     # 4. Iterate Rows and Download
     total_seen = 0
-    start_at = 2801
-    end_at = 2981
+    start_at = 1
+    end_at = faktur_pajak_page.get_total_records()
+    print(f"Total records found: {end_at}")
+    
+    if end_at == 0:
+        print("No records found for the given filter.")
+        return
+    
+    last_date_logged = None
     
     # Skip pages to get to the start_at range
     # Since 100 per page, row 201 is on Page 3
@@ -73,14 +87,18 @@ def test_faktur_pajak_download_not_match(page):
             
             current_row = current_rows[i]
             code = faktur_pajak_page.get_faktur_pajak_code(current_row)
+            upload_date = faktur_pajak_page.get_upload_date(current_row)
             
-            print(f"[{total_seen}/{end_at}] Processing: {code}...", end=" ", flush=True)
+            print(f"[{total_seen}/{end_at}] Processing: {code} ({upload_date})...", end=" ", flush=True)
             
             result = faktur_pajak_page.download_and_check(current_row)
             print(result)
             
             if result == "Not Found":
-                append_to_not_found_file(code)
+                if upload_date != last_date_logged:
+                    write_header_to_not_found_file(upload_date)
+                    last_date_logged = upload_date
+                append_to_not_found_file(code, upload_date)
         
         if total_seen < end_at and faktur_pajak_page.has_next_page():
             print("Moving to next page...")
